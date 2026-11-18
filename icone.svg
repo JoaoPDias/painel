@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- ícone do app: três barras que sobem e a linha da meta, nas cores do painel. Tudo dentro dos
+       60% centrais, para a máscara do Android (círculo, gota) não cortar nada. -->
+  <rect width="512" height="512" fill="#1F3F6E"/>
+  <rect x="156" y="286" width="52" height="70" rx="8" fill="#8EB4E7"/>
+  <rect x="230" y="236" width="52" height="120" rx="8" fill="#DFE8F3"/>
+  <rect x="304" y="176" width="52" height="180" rx="8" fill="#FEFCF7"/>
+  <path d="M150 196 L362 196" stroke="#E0B771" stroke-width="10" stroke-linecap="round" stroke-dasharray="2 22"/>
+</svg>

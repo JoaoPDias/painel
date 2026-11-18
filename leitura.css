@@ -1,0 +1,149 @@
+/* Camada de leitura do app: esconde o que ESCREVE. O painel do repo não muda — quem entra por
+   aqui só vê. Cada seletor desta folha tem que existir no painel.html (o teste confere), para a
+   camada não apodrecer calada quando o painel mudar. */
+
+/* lançar gasto e mandar para o bot */
+.so-leitura #fabBtn,
+.so-leitura [data-lancar],
+.so-leitura #btnBot,
+.so-leitura #btnBotTopo,
+.so-leitura #btnSave { display: none !important; }
+
+/* marcar pago/recebido, corrigir valor e desfazer correção.
+   O quadradinho NÃO some: ele é a primeira coluna da grade das listas (com display:none o nome
+   caía numa coluna de 20 px e quebrava palavra por palavra) e o ✓ dentro dele é dado de leitura —
+   é o que diz "já pago / já recebido", na tela e para o leitor de tela (com visibility:hidden o
+   checkbox saía da árvore de acessibilidade e a linha paga era lida igual à aberta). Fica sem
+   borda nem fundo e sem toque; o não marcado já é transparente no painel, o marcado mostra só o
+   ✓. O teclado ainda o alcança, e quem segura o Enter e o Espaço é a barreira de clique. */
+.so-leitura .c-zerar { display: none !important; }
+.so-leitura .c-chk { border-color: transparent; background: none; pointer-events: none; }
+.so-leitura .c-val { pointer-events: none; text-decoration: none !important; cursor: default; }
+
+/* apagar lançamento da lista e responder a Fila */
+.so-leitura .lanc-lista .lx,
+.so-leitura .fila-acoes,
+.so-leitura .fi-marca { display: none !important; }
+
+/* a barra de baixo fica com seis casas: sem o "+" do meio, as outras dividem a largura
+   (as duas de nome comprido seguem com a casa mais larga, como no painel) */
+.so-leitura .aba-lancar { display: none !important; }
+@media (max-width: 820px) {
+  .so-leitura .abas { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr); }
+}
+
+/* ---- a faixa do app: de quando são os dados, conferir agora, configurar ---- */
+#jpAppFaixa {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2, 8px) var(--s3, 12px);
+  margin: var(--s4, 16px) var(--s4, 16px) 0; padding: var(--s3, 12px) var(--s4, 16px);
+  border: 1px solid var(--line); border-radius: var(--raio-2, 12px); background: var(--card);
+  font-size: var(--fs-nota, .75rem); color: var(--ink2); line-height: var(--lh-lista, 1.35);
+}
+#jpAppFaixa .jp-quando { flex: 1 1 100%; min-width: 0; }
+#jpAppFaixa button {
+  font: inherit; font-weight: var(--fw-forte, 600); color: var(--accent-ink); background: none;
+  border: 1px solid var(--line-ctl); border-radius: var(--raio-pill, 999px);
+  min-height: 36px; padding: 0 var(--s3, 12px); cursor: pointer; position: relative;
+}
+#jpAppFaixa button::before { content: ""; position: absolute; inset: -4px; }
+#jpAppFaixa button[disabled] { opacity: .6; cursor: progress; }
+
+/* ---- o aviso que sobe da barra: dados novos, sem rede, token recusado ---- */
+#jpAppAviso {
+  position: fixed; left: 50%; transform: translateX(-50%); z-index: 60;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  max-width: min(92vw, 26rem); width: max-content;
+  display: flex; align-items: center; gap: var(--s3, 12px);
+  padding: var(--s2, 8px) var(--s2, 8px) var(--s2, 8px) var(--s4, 16px);
+  border-radius: var(--raio-pill, 999px); background: var(--ink); color: var(--bg);
+  box-shadow: var(--sombra); font-size: var(--fs-corpo, .875rem); line-height: var(--lh-lista, 1.35);
+}
+#jpAppAviso button {
+  font: inherit; font-weight: var(--fw-forte, 600); min-height: 36px; padding: 0 var(--s3, 12px);
+  border-radius: var(--raio-pill, 999px); border: none; background: var(--bg); color: var(--ink); cursor: pointer; white-space: nowrap;
+}
+@media (max-width: 820px) { #jpAppAviso { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); } }
+@media print { #jpAppFaixa, #jpAppAviso { display: none !important; } }
+
+/* ================= toque de app: só comportamento, a tela parada não muda ================= */
+
+/* Puxar o topo para baixo não recarrega: o Chrome do Android recarrega a página também no app
+   instalado, e aqui isso é baixar o painel inteiro sem querer. `contain` corta só a ação de FORA
+   (recarregar); o efeito de fim de rolagem continua, como em qualquer app. Na raiz E no body: até
+   o Chrome 139 quem valia para a tela era o body; do 140 em diante, a raiz. Só no eixo vertical:
+   o gesto de voltar do aparelho, que é de lado, não é tocado. */
+html.so-leitura,
+.so-leitura body { overscroll-behavior-y: contain; }
+
+/* sem o clarão azul do toque (quem responde é o estado pressionado, abaixo); toque curto nunca
+   espera o segundo (zoom com dois toques) — a pinça continua; segurar o dedo num link não abre o
+   menu de link do iPhone */
+html.so-leitura {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+}
+/* no WebKit, quem rola (overflow auto) devolve o touch-action ao padrão para si e para os filhos */
+.so-leitura .mesnav,
+.so-leitura .segm,
+.so-leitura .graf-tab,
+.so-leitura .tabela-wrap,
+.so-leitura .sheet-rolo { touch-action: manipulation; }
+
+/* rótulo de controle não é texto de leitura: segurar o dedo não seleciona nem abre a lupa.
+   Valores, nomes, tabelas, dicas e textos da Fila continuam copiáveis. */
+.so-leitura .abas,
+.so-leitura .lateral,
+.so-leitura .segm,
+.so-leitura .mesnav,
+.so-leitura .chip,
+.so-leitura .btn,
+.so-leitura .info-bt,
+.so-leitura .cal-d,
+.so-leitura .graf-box,
+.so-leitura summary,
+.so-leitura .o-cat.clicavel .o-rot { -webkit-user-select: none; user-select: none; }
+
+/* com a janela do "Posso comprar isto?" aberta, arrastar o dedo no véu não rola a página de trás */
+.so-leitura .sheet-back { touch-action: none; }
+
+/* Este bloco é só comportamento de toque: nenhuma regra dele mexe em caixa (padding, margem,
+   tamanho, posição). O recuo para o recorte lateral do aparelho deitado mudava a tela parada
+   (o conteúdo andava e encolhia) e saiu daqui — é desenho, não toque. */
+
+/* Estado pressionado: o que o mouse vê ao passar por cima, o dedo vê enquanto aperta — as mesmas
+   tintas do :hover do painel, e só durante o toque (no toque rápido o navegador segura o :active
+   por uma fração de segundo; arrastar para rolar não o liga). Sem transição: nada se move. Quem
+   já está escolhido ou aberto não muda, e quem está desabilitado não acende (o navegador liga o
+   :active também em botão desabilitado; o painel faz o mesmo corte no :hover dele). No toque
+   rápido em quem TROCA de estado (aba, segmento, mês), o clique chega antes do primeiro quadro e
+   o que se vê é o estado novo, não a tinta: ela aparece quando o dedo demora. */
+.so-leitura .abas button:not([aria-current="page"]):active { background: var(--chip); color: var(--ink); }
+.so-leitura .chip:not(.on):not(.sel):not([aria-pressed="true"]):not(:disabled):not([aria-disabled="true"]):active,
+.so-leitura .btn:not(.primary):not(:disabled):not([aria-disabled="true"]):active,
+#jpAppFaixa button:not(:disabled):active { border-color: var(--ink2); color: var(--ink); }
+.so-leitura .segm button:not([aria-current="page"]):active,
+.so-leitura .info-bt:not([aria-expanded="true"]):active,
+.so-leitura a[data-ir]:active,
+.so-leitura summary:active { color: var(--ink); }
+.so-leitura .sh[data-dobra]:active .t,
+.so-leitura #topoPonte > button:active { color: var(--ink2); }
+.so-leitura .o-cat.clicavel:active .o-rot { color: var(--accent); }
+.so-leitura .o-mes:not([aria-current="true"]):active,
+.so-leitura .mes-linha:not([aria-pressed="true"]):active,
+.so-leitura .barra:not([aria-pressed="true"]):active { background: var(--line-soft); }
+.so-leitura button.c-nome:active b { color: var(--accent-ink); }
+.so-leitura .ft-item:active .ft-tit { text-decoration: underline; text-decoration-color: var(--line-ctl); text-underline-offset: 3px; }
+#jpAppAviso button:active { background: var(--chip); }
+
+
+/* ---- gestos de celular (leitura.js) ----
+   A classe jp-desliza é posta pelo script quando deslizar de lado está ligado e a página não
+   está ampliada. pan-y: a rolagem de cima a baixo segue sendo do navegador; o movimento de lado
+   ele entrega ao script, sem tentar rolar. pinch-zoom: a pinça continua valendo. O que rola de
+   lado por conta própria (a fileira de meses, as tabelas) volta a aceitar o dedo de lado sozinho:
+   o navegador religa a rolagem dentro de quem rola. Parada, a tela é a mesma. */
+.jp-desliza .conteudo { touch-action: pan-y pinch-zoom; }
+/* durante o gesto a seção anda de lado: o que sai da coluna é cortado, para a página não ganhar
+   largura (clip, e não hidden: hidden faria do .conteudo quem rola, e o topo deixaria de grudar) */
+.jp-deslizando .conteudo { overflow-x: clip; }
